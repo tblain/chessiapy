@@ -1,15 +1,19 @@
+import time
 import chess
 from chess import polyglot
 board = chess.Board()
+book = chess.polyglot.open_reader("Formula12.bin")
 
 # ----- variables -----
 
-depth = 4
+depth = 6
 abandon = False
 # 0 => human / 1 => minimax / 2 => alphaBeta
 whitePlayer = 2
 blackPlayer = 2
-
+positions = 0
+global turnNumber
+turnNumber = 1
 
 # ----- PieceTable -----
 
@@ -158,6 +162,8 @@ def getKillerMoves(board):
 # ----- alphaBeta -----
 
 def alphaBeta(depth, board, isMaximisingWhite,a , b):
+    global positions
+    positions += 1
     if depth == 0:
         score = evalBoard(board)
         return score, score
@@ -206,6 +212,9 @@ def alphaBeta(depth, board, isMaximisingWhite,a , b):
 # ----- getAlphaBetaMove -----
 
 def getAlphaBetaMove(color):
+    global positions
+
+    t1 = time.time()
     print(" killerMoves")
     moves = getKillerMoves(board)
     print(" ")
@@ -213,6 +222,16 @@ def getAlphaBetaMove(color):
     print(" ")
     print(" ")
     # print(moves)
+
+    if turnNumber < 13:
+        main_entry = book.find(board)
+        entryMove = main_entry.move()
+        if entryMove:
+            print(" by book")
+            t2 = time.time()
+            print("time : " + str(t2 - t1))
+            positions = 0
+            return entryMove
 
     bestMove = False
     # bestScore = -99999 * colorCoeff
@@ -244,6 +263,10 @@ def getAlphaBetaMove(color):
         # print("a : " + str(a) + " | b : " + str(b))
         board.pop()
 
+    print("by alphaBeta")
+    t2 = time.time()
+    print("time : " + str(t2 - t1) + " | p : " + str(positions) + " | p/s : " + str(positions/(t2-t1)))
+    positions = 0
     return bestMove
 
 # ----- minimax -----
@@ -349,9 +372,9 @@ while not board.is_game_over() and not abandon:
     print("===============================================")
     print(" ")
     if board.turn:
-        print(" turn : White")
+        print(" turn " + str(turnNumber) + " : White")
     else:
-        print(" turn : Black")
+        print(" turn " + str(turnNumber) + " : Black")
     print(board)
     print(" ")
 
@@ -364,6 +387,8 @@ while not board.is_game_over() and not abandon:
         move = getBlackMove()
         # getBlackMove()
     print(" Choosed move : " + str(move))
+    turnNumber += 1
+
     board.push(move)
 
 
