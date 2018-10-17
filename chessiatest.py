@@ -19,31 +19,31 @@ def evalBoard(board):
     letter = fen[0]
 
     while letter != " ":
-        if letter == "P":
+        if letter == "p":
             score -= 1
-        elif letter == "p":
+        elif letter == "P":
             score += 1
 
-        elif letter == "B":
+        elif letter == "b":
             score -= 3
-        elif letter == "N":
+        elif letter == "n":
             score -= 3
-        elif letter == "R":
+        elif letter == "r":
             score -= 5
-        elif letter == "Q":
+        elif letter == "q":
             score -= 9
-        elif letter == "K":
+        elif letter == "k":
             score -= 100
 
-        elif letter == "b":
+        elif letter == "B":
             score += 3
-        elif letter == "n":
+        elif letter == "N":
             score += 3
-        elif letter == "r":
+        elif letter == "R":
             score += 5
-        elif letter == "q":
+        elif letter == "Q":
             score += 9
-        elif letter == "k":
+        elif letter == "K":
             score += 100
         # print(letter)
         i += 1
@@ -64,7 +64,9 @@ def minimax(depth, board, isMaximisingPlayer):
         bestScore = -99999
         for move in moves:
             board.push(move)
-            bestScore = max(bestScore, minimax(depth - 1, board, not isMaximisingPlayer))
+            minimaxScore = minimax(depth - 1, board, not isMaximisingPlayer)
+            bestScore = max(bestScore, minimaxScore)
+            # print("max : " + str(bestScore))
             board.pop()
 
         return bestScore
@@ -73,7 +75,9 @@ def minimax(depth, board, isMaximisingPlayer):
         bestScore = 99999
         for move in moves:
             board.push(move)
-            bestScore = min(bestScore, minimax(depth - 1, board, not isMaximisingPlayer))
+            minimaxScore = minimax(depth - 1, board, not isMaximisingPlayer)
+            bestScore = min(bestScore, minimaxScore)
+            # print("min : " + str(bestScore))
             board.pop()
 
         return bestScore
@@ -99,10 +103,11 @@ def getIaMove(color):
 
         board.push(move)
         moveScore = minimax(depth - 1, board, not board.turn)
-
-        if moveScore > bestScore:
+        # print(moveScore)
+        if (moveScore > bestScore and color == 1) or (moveScore < bestScore and color == 0):
             bestMove = move
             bestScore = moveScore
+            print(" bestScore : " + str(bestScore) + " with move : " + str(bestMove))
 
         board.pop()
 
@@ -113,9 +118,11 @@ def getIaMove(color):
 # This part return the move choosen by the human player
 
 def getHumanPlayerMove(color):
-    posFrom = input("posFrom : ")
-    posTo = input("posTo : ")
-    return chess.Move.from_uci(posFrom + posTo)
+    # posFrom = input("posFrom : ")
+    # posTo = input("posTo : ")
+    move = input("Move : ")
+
+    return chess.Move.from_uci(move)
 
 # ----- Get white player move -----
 
