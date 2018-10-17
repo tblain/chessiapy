@@ -6,7 +6,7 @@ board = chess.Board()
 depth = 4
 abandon = False
 # 1 => ia / 0 => human
-whitePlayer = 1
+whitePlayer = 0
 blackPlayer = 1
 
 # ---------------------
@@ -20,20 +20,21 @@ def evalBoard(board):
 
     while letter != " ":
         if letter == "P":
-            score += -1
-        elif letter == "B":
-            score += -3
-        elif letter == "N":
-            score += -3
-        elif letter == "R":
-            score += -5
-        elif letter == "Q":
-            score += -9
-        elif letter == "K":
-            score += -100
-
+            score -= 1
         elif letter == "p":
             score += 1
+
+        elif letter == "B":
+            score -= 3
+        elif letter == "N":
+            score -= 3
+        elif letter == "R":
+            score -= 5
+        elif letter == "Q":
+            score -= 9
+        elif letter == "K":
+            score -= 100
+
         elif letter == "b":
             score += 3
         elif letter == "n":
