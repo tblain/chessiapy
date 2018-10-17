@@ -5,46 +5,105 @@ board = chess.Board()
 
 depth = 4
 abandon = False
-# 1 => ia / 0 => human
-whitePlayer = 0
-blackPlayer = 1
+# 0 => human / 1 => minimax / 2 => alphaBeta
+whitePlayer = 1
+blackPlayer = 2
 
-# ---------------------
+
+# ----- PieceTable -----
+
+whitePawnTable = [
+    100, 100, 100, 100, 100, 100, 100, 100,
+    50, 50, 50, 50, 50, 50, 50, 50,
+    10, 10, 20, 30, 30, 20, 10, 10,
+    5, 5, 10, 27, 27, 10, 5, 5,
+    0, 0, 0, 25, 25, 0, 0, 0,
+    5, -5, -10, 0, 0, -10, -5, 5,
+    5, 10, 10, -25, -25, 10, 10, 5,
+    0, 0, 0, 0, 0, 0, 0, 0
+]
+
+whiteBishopTable = [
+    0, 0, -30, 0, 0, -30, 0, 0,
+    0, 0, 0, 30, 30, 0, 0, 0,
+    0, 0, 30, 45, 45, 30, 0, 0,
+    0, 30, 45, 60, 60, 45, 30, 0,
+    0, 30, 45, 60, 60, 45, 30, 0,
+    0, 0, 30, 45, 45, 30, 0, 0,
+    0, 0, 0, 30, 30, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0
+]
+
+whiteKnightTable = [
+    -50, -40, -30, -30, -30, -30, -40, -50,
+    -40, -20, 0, 0, 0, 0, -20, -40,
+    -30, 0, 10, 15, 15, 10, 0, -30,
+    -30, 5, 15, 20, 20, 15, 5, -30,
+    -30, 0, 15, 20, 20, 15, 0, -30,
+    -30, 5, 10, 15, 15, 10, 5, -30,
+    -40, -20, 0, 5, 5, 0, -20, -40,
+    -50, -40, -20, -30, -30, -20, -40, -50
+]
+
+blackPawnTable = whitePawnTable[::-1]
+blackBishopTable = whiteBishopTable[::-1]
+blackKnightTable = whiteKnightTable[::-1]
+
+print(blackPawnTable)
 
 # ----- evalBoard -----
 def evalBoard(board):
     score = 0
     fen = board.fen()
     i = 0
+    j = 0
     letter = fen[0]
 
     while letter != " ":
+        # print(j)
         if letter == "p":
-            score -= 1
+            score -= 100 - blackPawnTable[j]
+            j+=1
         elif letter == "P":
-            score += 1
+            score += 100 + whitePawnTable[j]
+            j+=1
 
         elif letter == "b":
-            score -= 3
+            score -= 325 - blackBishopTable[j]
+            j+=1
         elif letter == "n":
-            score -= 3
-        elif letter == "r":
-            score -= 5
-        elif letter == "q":
-            score -= 9
-        elif letter == "k":
-            score -= 100
+            score -= 325 - blackKnightTable[j]
+            j+=1
 
         elif letter == "B":
-            score += 3
+            score += 325 + whiteBishopTable[j]
+            j+=1
         elif letter == "N":
-            score += 3
+            score += 325 + whiteKnightTable[j]
+            j+=1
+
+        elif letter == "r":
+            score -= 550
+            j+=1
+        elif letter == "q":
+            score -= 1000
+            j+=1
         elif letter == "R":
-            score += 5
+            score += 550
+            j+=1
+
         elif letter == "Q":
-            score += 9
+            score += 1000
+            j+=1
+        elif letter == "k":
+            score -= 100
+            j+=1
         elif letter == "K":
             score += 100
+            j+=1
+
+        elif letter != "/":
+            j+= int(letter)
         # print(letter)
         i += 1
         letter = fen[i]
@@ -52,19 +111,97 @@ def evalBoard(board):
 
     return score
 
+
+
+# ----- alphaBeta -----
+
+def alphaBeta(depth, board, isMaximisingWhite,a , b):
+    if depth == 0:
+        score = evalBoard(board)
+        return score, score
+
+    moves = board.legal_moves
+
+    if isMaximisingWhite:
+        for move in moves:
+            board.push(move)
+
+            dump, y = alphaBeta(depth - 1, board, not isMaximisingWhite, a, b)
+
+            a = max(a, y)
+
+            if a >= b:
+                board.pop()
+                return a, b
+            # print("max : " + str(bestScore))
+            board.pop()
+
+        return a, b
+
+    else:
+        for move in moves:
+            board.push(move)
+
+            x, dump = alphaBeta(depth - 1, board, not isMaximisingWhite, a, b)
+
+            b = min(b, x)
+
+            if a >= b:
+                board.pop()
+                return a, b
+
+            # print("min : " + str(bestScore))
+            board.pop()
+
+        return a, b
+
+# ----- getAlphaBetaMove -----
+
+def getAlphaBetaMove(color):
+    moves = board.legal_moves
+    print(moves)
+
+    bestMove = False
+    # bestScore = -99999 * colorCoeff
+    a = -999999
+    b =  999999
+
+    for move in moves:
+        if not bestMove:
+            bestMove = move
+
+        board.push(move)
+
+        # x => alpha value returned, y beta value returned
+        x, y = alphaBeta(depth - 1, board, board.turn, a, b)
+        print("x : " + str(x) + " | y : " + str(y))
+        if color == 1 and y > a:
+            bestMove = move
+            a = y
+            print(" bestScore : " + str(a) + " with move : " + str(bestMove))
+
+        elif color == 0 and x < b:
+            bestMove = move
+            b = x
+            print(" bestScore : " + str(b) + " with move : " + str(bestMove))
+        # print("a : " + str(a) + " | b : " + str(b))
+        board.pop()
+
+    return bestMove
+
 # ----- minimax -----
 
-def minimax(depth, board, isMaximisingPlayer):
+def minimax(depth, board, isMaximisingWhite):
     if depth == 0:
         return evalBoard(board)
 
     moves = board.legal_moves
 
-    if isMaximisingPlayer:
+    if isMaximisingWhite:
         bestScore = -99999
         for move in moves:
             board.push(move)
-            minimaxScore = minimax(depth - 1, board, not isMaximisingPlayer)
+            minimaxScore = minimax(depth - 1, board, not isMaximisingWhite)
             bestScore = max(bestScore, minimaxScore)
             # print("max : " + str(bestScore))
             board.pop()
@@ -75,18 +212,17 @@ def minimax(depth, board, isMaximisingPlayer):
         bestScore = 99999
         for move in moves:
             board.push(move)
-            minimaxScore = minimax(depth - 1, board, not isMaximisingPlayer)
+            minimaxScore = minimax(depth - 1, board, not isMaximisingWhite)
             bestScore = min(bestScore, minimaxScore)
             # print("min : " + str(bestScore))
             board.pop()
 
         return bestScore
 
+# ----- getMiniMaxMove -----
+# This part return the move choosen by the minimax algo
 
-# ----- Get ia move -----
-# This part return the move choosen by the ia
-
-def getIaMove(color):
+def getMiniMaxMove(color):
     moves = board.legal_moves
     print(moves)
 
@@ -112,7 +248,7 @@ def getIaMove(color):
         board.pop()
 
     print(" bestScore : " + str(bestScore))
-    return bestMove;
+    return bestMove
 
 # ----- Get human player move -----
 # This part return the move choosen by the human player
@@ -127,19 +263,22 @@ def getHumanPlayerMove(color):
 # ----- Get white player move -----
 
 def getWhiteMove():
-    if whitePlayer == 1:
-        return getIaMove(1)
-    else:
+    if whitePlayer == 0:
         return getHumanPlayerMove(1)
+    elif whitePlayer == 1:
+        return getMiniMaxMove(1)
+    elif whitePlayer == 2:
+        return getAlphaBetaMove(1)
 
 # ----- Get black player move -----
 
 def getBlackMove():
-    if blackPlayer == 1:
-        return getIaMove(0)
-    else:
+    if blackPlayer == 0:
         return getHumanPlayerMove(0)
-
+    elif blackPlayer == 1:
+        return getMiniMaxMove(0)
+    elif blackPlayer == 2:
+        return getAlphaBetaMove(0)
 
 # ==================================================
 # ==================================================
@@ -155,7 +294,7 @@ while not board.is_game_over() and not abandon:
     if board.turn:
         print(" turn : White")
     else:
-        print(" turn : White")
+        print(" turn : Black")
     print(board)
     print(" ")
 
