@@ -1,4 +1,5 @@
 import chess
+from chess import polyglot
 board = chess.Board()
 
 # ----- variables -----
@@ -6,7 +7,7 @@ board = chess.Board()
 depth = 4
 abandon = False
 # 0 => human / 1 => minimax / 2 => alphaBeta
-whitePlayer = 1
+whitePlayer = 2
 blackPlayer = 2
 
 
@@ -111,7 +112,48 @@ def evalBoard(board):
 
     return score
 
+# ----- swapElementsIn2Arrays -----
 
+def swapElementsIn2Arrays(arr1, arr2, f, t):
+    # array 1
+    tmp = arr1[f]
+    arr1[f] = arr1[t]
+    arr1[t] = tmp
+
+    # arr2
+    tmp = arr2[f]
+    arr2[f] = arr2[t]
+    arr2[t] = tmp
+
+# ----- getKillerMoves -----
+
+def getKillerMoves(board):
+    legalMoves = board.legal_moves
+    movesEval = []
+    moves = []
+    i = 0
+    for move in legalMoves:
+        board.push(move)
+        moves.append(move)
+        if depth > 4:
+            movesEval.append(alphaBeta(3, board, not board.turn, -999999, 999999))
+        else:
+            movesEval.append(minimax(1, board, not board.turn))
+        board.pop()
+    # print("moves")
+    # print(move)
+    # print("movesEval")
+
+    leng = len(moves)
+
+    for i in range(0, leng):
+        for j in range(0, leng):
+            if board.turn and movesEval[j-1]<movesEval[j]:
+                swapElementsIn2Arrays(moves, movesEval, j-1, j)
+            elif not board.turn and movesEval[j-1]>movesEval[j]:
+                swapElementsIn2Arrays(moves, movesEval, j-1, j)
+
+    return moves
 
 # ----- alphaBeta -----
 
@@ -125,65 +167,80 @@ def alphaBeta(depth, board, isMaximisingWhite,a , b):
     if isMaximisingWhite:
         for move in moves:
             board.push(move)
-
-            dump, y = alphaBeta(depth - 1, board, not isMaximisingWhite, a, b)
-
-            a = max(a, y)
-
-            if a >= b:
+            if board.is_checkmate():
                 board.pop()
-                return a, b
-            # print("max : " + str(bestScore))
-            board.pop()
+                return 999999, b
+            else:
+                dump, y = alphaBeta(depth - 1, board, not isMaximisingWhite, a, b)
+
+                a = max(a, y)
+
+                if a >= b:
+                    board.pop()
+                    return a, b
+                # print("max : " + str(bestScore))
+                board.pop()
 
         return a, b
 
     else:
         for move in moves:
             board.push(move)
-
-            x, dump = alphaBeta(depth - 1, board, not isMaximisingWhite, a, b)
-
-            b = min(b, x)
-
-            if a >= b:
+            if board.is_checkmate():
                 board.pop()
-                return a, b
+                return a, 999999
+            else:
+                x, dump = alphaBeta(depth - 1, board, not isMaximisingWhite, a, b)
 
-            # print("min : " + str(bestScore))
-            board.pop()
+                b = min(b, x)
+
+                if a >= b:
+                    board.pop()
+                    return a, b
+
+                # print("min : " + str(bestScore))
+                board.pop()
 
         return a, b
 
 # ----- getAlphaBetaMove -----
 
 def getAlphaBetaMove(color):
-    moves = board.legal_moves
-    print(moves)
+    print(" killerMoves")
+    moves = getKillerMoves(board)
+    print(" ")
+    print("  EVAL = " + str(evalBoard(board)))
+    print(" ")
+    print(" ")
+    # print(moves)
 
     bestMove = False
     # bestScore = -99999 * colorCoeff
     a = -999999
     b =  999999
-
+    i = 1
     for move in moves:
         if not bestMove:
             bestMove = move
+
+        print("========================================")
+        print("alphaBeta sur " + str(move) + " | " + str(i) + "/" + str(len(moves)))
+        i+=1
 
         board.push(move)
 
         # x => alpha value returned, y beta value returned
         x, y = alphaBeta(depth - 1, board, board.turn, a, b)
-        print("x : " + str(x) + " | y : " + str(y))
+        # print("x : " + str(x) + " | y : " + str(y))
         if color == 1 and y > a:
             bestMove = move
             a = y
-            print(" bestScore : " + str(a) + " with move : " + str(bestMove))
+            # print(" bestScore : " + str(a) + " with move : " + str(bestMove))
 
         elif color == 0 and x < b:
             bestMove = move
             b = x
-            print(" bestScore : " + str(b) + " with move : " + str(bestMove))
+            # print(" bestScore : " + str(b) + " with move : " + str(bestMove))
         # print("a : " + str(a) + " | b : " + str(b))
         board.pop()
 
