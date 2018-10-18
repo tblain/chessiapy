@@ -6,7 +6,7 @@ book = chess.polyglot.open_reader("Formula12.bin")
 
 # ----- variables -----
 
-depth = 6
+depth = 5
 abandon = False
 # 0 => human / 1 => minimax / 2 => alphaBeta
 whitePlayer = 2
@@ -14,6 +14,8 @@ blackPlayer = 2
 positions = 0
 global turnNumber
 turnNumber = 1
+useBook = True
+time = 10
 
 # ----- PieceTable -----
 
@@ -215,24 +217,26 @@ def getAlphaBetaMove(color):
     global positions
 
     t1 = time.time()
+
+    if useBook and turnNumber < 13:
+        main_entry = book.find(board)
+        if main_entry:
+            entryMove = main_entry.move()
+            if entryMove:
+                print(" by book")
+                t2 = time.time()
+                print("time : " + str(t2 - t1))
+                positions = 0
+                return entryMove
+
     print(" killerMoves")
     moves = getKillerMoves(board)
     print(" ")
     print("  EVAL = " + str(evalBoard(board)))
     print(" ")
     print(" ")
+
     # print(moves)
-
-    if turnNumber < 13:
-        main_entry = book.find(board)
-        entryMove = main_entry.move()
-        if entryMove:
-            print(" by book")
-            t2 = time.time()
-            print("time : " + str(t2 - t1))
-            positions = 0
-            return entryMove
-
     bestMove = False
     # bestScore = -99999 * colorCoeff
     a = -999999
@@ -336,7 +340,8 @@ def getMiniMaxMove(color):
 def getHumanPlayerMove(color):
     # posFrom = input("posFrom : ")
     # posTo = input("posTo : ")
-    move = input("Move : ")
+    
+    passmove = input("Move : ")
 
     return chess.Move.from_uci(move)
 
