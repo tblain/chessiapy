@@ -2,11 +2,11 @@ import time
 import chess
 from chess import polyglot
 board = chess.Board()
-book = chess.polyglot.open_reader("Formula12.bin")
+book = chess.polyglot.open_reader("dc.bin")
 
 # ----- variables -----
 
-depth = 5
+depth = 4
 abandon = False
 # 0 => human / 1 => minimax / 2 => alphaBeta
 whitePlayer = 2
@@ -15,7 +15,7 @@ positions = 0
 global turnNumber
 turnNumber = 1
 useBook = True
-time = 10
+maxTime = 10
 
 # ----- PieceTable -----
 
@@ -218,12 +218,15 @@ def getAlphaBetaMove(color):
 
     t1 = time.time()
 
-    if useBook and turnNumber < 13:
-        main_entry = book.find(board)
-        if main_entry:
+    if useBook and color == 1:
+        main_entrys = book.find_all(board)
+        if sum(1 for x in main_entrys) > 0:
+            main_entry = book.find(board)
             entryMove = main_entry.move()
+            # print("entryMove : " + str(entryMove))
             if entryMove:
                 print(" by book")
+                print("move : " + str(entryMove))
                 t2 = time.time()
                 print("time : " + str(t2 - t1))
                 positions = 0
@@ -236,36 +239,41 @@ def getAlphaBetaMove(color):
     print(" ")
     print(" ")
 
-    # print(moves)
     bestMove = False
-    # bestScore = -99999 * colorCoeff
-    a = -999999
-    b =  999999
-    i = 1
-    for move in moves:
-        if not bestMove:
-            bestMove = move
+    currentDepth = 2
 
-        print("========================================")
-        print("alphaBeta sur " + str(move) + " | " + str(i) + "/" + str(len(moves)))
-        i+=1
+    t3 = time.time()
+    while t3 - t1 < maxTime:
+        print(" currentDepth : " + str(currentDepth) + " | time " + str(t3 - t1))
+        a = -999999
+        b =  999999
+        i = 1
+        for move in moves:
+            if not bestMove:
+                bestMove = move
 
-        board.push(move)
+            # print("========================================")
+            # print("alphaBeta sur " + str(move) + " | " + str(i) + "/" + str(len(moves)))
+            i+=1
 
-        # x => alpha value returned, y beta value returned
-        x, y = alphaBeta(depth - 1, board, board.turn, a, b)
-        # print("x : " + str(x) + " | y : " + str(y))
-        if color == 1 and y > a:
-            bestMove = move
-            a = y
-            # print(" bestScore : " + str(a) + " with move : " + str(bestMove))
+            board.push(move)
 
-        elif color == 0 and x < b:
-            bestMove = move
-            b = x
-            # print(" bestScore : " + str(b) + " with move : " + str(bestMove))
-        # print("a : " + str(a) + " | b : " + str(b))
-        board.pop()
+            # x => alpha value returned, y beta value returned
+            x, y = alphaBeta(currentDepth - 1, board, board.turn, a, b)
+            if color == 1 and y > a:
+                bestMove = move
+                a = y
+
+            elif color == 0 and x < b:
+                bestMove = move
+                b = x
+
+            board.pop()
+
+            if time.time() - t1 > maxTime:
+                break
+        t3 = time.time()
+        currentDepth += 1
 
     print("by alphaBeta")
     t2 = time.time()
@@ -340,7 +348,7 @@ def getMiniMaxMove(color):
 def getHumanPlayerMove(color):
     # posFrom = input("posFrom : ")
     # posTo = input("posTo : ")
-    
+
     passmove = input("Move : ")
 
     return chess.Move.from_uci(move)
