@@ -2,14 +2,14 @@ import time
 import chess
 from chess import polyglot
 board = chess.Board()
-book = chess.polyglot.open_reader("dc.bin")
+book = chess.polyglot.open_reader("Formula12.bin")
 
 # ----- variables -----
 
 depth = 4
 abandon = False
 # 0 => human / 1 => minimax / 2 => alphaBeta
-whitePlayer = 2
+whitePlayer = 0
 blackPlayer = 2
 positions = 0
 global turnNumber
